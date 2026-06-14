@@ -6,16 +6,18 @@
 
 # Test info
 
-- Name: ui.spec.js >> Appointments section @ui >> appointment modal has patient and doctor selects
-- Location: tests\ui.spec.js:279:3
+- Name: ui.spec.js >> Patients section @ui >> search filters patients by name
+- Location: tests\ui.spec.js:174:3
 
 # Error details
 
 ```
-Error: page.goto: Target page, context or browser has been closed
-Call log:
-  - navigating to "http://localhost:4000/", waiting until "load"
-
+Error: page.waitForURL: Target page, context or browser has been closed
+=========================== logs ===========================
+waiting for navigation to "**/dashboard.html" until "load"
+  navigated to "http://localhost:4000/dashboard.html"
+  "networkidle" event fired
+============================================================
 ```
 
 # Test source
@@ -31,12 +33,12 @@ Call log:
   8   | 
   9   | // Helper: login and store session in localStorage before navigating to dashboard
   10  | async function loginAndGoToDashboard(page) {
-> 11  |   await page.goto('/');
-      |              ^ Error: page.goto: Target page, context or browser has been closed
+  11  |   await page.goto('/');
   12  |   await page.fill('#username', 'admin');
   13  |   await page.fill('#password', 'password123');
   14  |   await page.click('#login-btn');
-  15  |   await page.waitForURL('**/dashboard.html', { timeout: 8000 });
+> 15  |   await page.waitForURL('**/dashboard.html', { timeout: 8000 });
+      |              ^ Error: page.waitForURL: Target page, context or browser has been closed
   16  | }
   17  | 
   18  | // =================== LOGIN PAGE ===================
@@ -133,4 +135,8 @@ Call log:
   109 |     await expect(page.locator('#user-name')).not.toBeEmpty();
   110 |     await expect(page.locator('#user-role')).not.toBeEmpty();
   111 |   });
+  112 | });
+  113 | 
+  114 | // =================== NAVIGATION ===================
+  115 | 
 ```
