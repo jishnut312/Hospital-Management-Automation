@@ -1,6 +1,8 @@
 // @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'https://jishnut77.pythonanywhere.com';
+
 module.exports = defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -14,16 +16,9 @@ module.exports = defineConfig({
   ],
 
   use: {
-    baseURL: 'http://localhost:4000',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-  },
-
-  webServer: {
-    command: 'node server.js',
-    url: 'http://localhost:4000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 15_000,
   },
 
   projects: [

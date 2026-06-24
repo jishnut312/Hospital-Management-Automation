@@ -6,7 +6,7 @@ const { test, expect } = require('@playwright/test');
  * Uses Playwright's request context — no browser needed.
  */
 
-const BASE = 'http://localhost:4000';
+const BASE = process.env.API_BASE_URL || 'https://jishnut77.pythonanywhere.com';
 
 // =================== AUTH ===================
 
