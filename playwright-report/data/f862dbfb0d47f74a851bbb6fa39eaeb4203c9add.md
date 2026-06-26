@@ -1,0 +1,143 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: api.spec.js >> POST /api/login @api >> returns token on valid credentials
+- Location: tests\api.spec.js:14:3
+
+# Error details
+
+```
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 200
+Received: 404
+```
+
+# Test source
+
+```ts
+  1   | // @ts-check
+  2   | const { test, expect } = require('@playwright/test');
+  3   | 
+  4   | /**
+  5   |  * API Tests (@api)
+  6   |  * Uses Playwright's request context — no browser needed.
+  7   |  */
+  8   | 
+  9   | const BASE = process.env.API_BASE_URL || 'https://jishnut77.pythonanywhere.com';
+  10  | 
+  11  | // =================== AUTH ===================
+  12  | 
+  13  | test.describe('POST /api/login @api', () => {
+  14  |   test('returns token on valid credentials', async ({ request }) => {
+  15  |     const res = await request.post(`${BASE}/api/login`, {
+  16  |       data: { username: 'admin', password: 'password123' }
+  17  |     });
+> 18  |     expect(res.status()).toBe(200);
+      |                          ^ Error: expect(received).toBe(expected) // Object.is equality
+  19  |     const body = await res.json();
+  20  |     expect(body).toHaveProperty('token');
+  21  |     expect(body).toHaveProperty('role');
+  22  |     expect(body).toHaveProperty('name');
+  23  |     expect(body.token).toContain('admin');
+  24  |   });
+  25  | 
+  26  |   test('returns 401 for wrong password', async ({ request }) => {
+  27  |     const res = await request.post(`${BASE}/api/login`, {
+  28  |       data: { username: 'admin', password: 'wrongpass' }
+  29  |     });
+  30  |     expect(res.status()).toBe(401);
+  31  |     const body = await res.json();
+  32  |     expect(body).toHaveProperty('error');
+  33  |   });
+  34  | 
+  35  |   test('returns 401 for unknown user', async ({ request }) => {
+  36  |     const res = await request.post(`${BASE}/api/login`, {
+  37  |       data: { username: 'ghost', password: 'anything' }
+  38  |     });
+  39  |     expect(res.status()).toBe(401);
+  40  |   });
+  41  | 
+  42  |   test('returns 400 when fields are missing', async ({ request }) => {
+  43  |     const res = await request.post(`${BASE}/api/login`, { data: {} });
+  44  |     expect(res.status()).toBe(400);
+  45  |   });
+  46  | 
+  47  |   test('nurse credentials also work', async ({ request }) => {
+  48  |     const res = await request.post(`${BASE}/api/login`, {
+  49  |       data: { username: 'nurse', password: 'nurse123' }
+  50  |     });
+  51  |     expect(res.status()).toBe(200);
+  52  |     const body = await res.json();
+  53  |     expect(body.role).toBe('Nurse');
+  54  |   });
+  55  | });
+  56  | 
+  57  | // =================== DASHBOARD ===================
+  58  | 
+  59  | test.describe('GET /api/dashboard @api', () => {
+  60  |   test('returns 200 with stats object', async ({ request }) => {
+  61  |     const res = await request.get(`${BASE}/api/dashboard`);
+  62  |     expect(res.status()).toBe(200);
+  63  |     const body = await res.json();
+  64  |     expect(body).toHaveProperty('totalPatients');
+  65  |     expect(body).toHaveProperty('appointmentsToday');
+  66  |     expect(body).toHaveProperty('doctorsOnDuty');
+  67  |     expect(body).toHaveProperty('pendingBills');
+  68  |     expect(body).toHaveProperty('pendingBillsAmount');
+  69  |   });
+  70  | 
+  71  |   test('totalPatients is a positive number', async ({ request }) => {
+  72  |     const res  = await request.get(`${BASE}/api/dashboard`);
+  73  |     const body = await res.json();
+  74  |     expect(typeof body.totalPatients).toBe('number');
+  75  |     expect(body.totalPatients).toBeGreaterThan(0);
+  76  |   });
+  77  | 
+  78  |   test('doctorsOnDuty is a non-negative number', async ({ request }) => {
+  79  |     const res  = await request.get(`${BASE}/api/dashboard`);
+  80  |     const body = await res.json();
+  81  |     expect(body.doctorsOnDuty).toBeGreaterThanOrEqual(0);
+  82  |   });
+  83  | });
+  84  | 
+  85  | // =================== PATIENTS ===================
+  86  | 
+  87  | test.describe('GET /api/patients @api', () => {
+  88  |   test('returns 200 with array', async ({ request }) => {
+  89  |     const res = await request.get(`${BASE}/api/patients`);
+  90  |     expect(res.status()).toBe(200);
+  91  |     const body = await res.json();
+  92  |     expect(Array.isArray(body)).toBeTruthy();
+  93  |     expect(body.length).toBeGreaterThan(0);
+  94  |   });
+  95  | 
+  96  |   test('each patient has required fields', async ({ request }) => {
+  97  |     const res      = await request.get(`${BASE}/api/patients`);
+  98  |     const patients = await res.json();
+  99  |     for (const p of patients) {
+  100 |       expect(p).toHaveProperty('id');
+  101 |       expect(p).toHaveProperty('name');
+  102 |       expect(p).toHaveProperty('age');
+  103 |       expect(p).toHaveProperty('gender');
+  104 |       expect(p).toHaveProperty('status');
+  105 |     }
+  106 |   });
+  107 | 
+  108 |   test('returns JSON content-type', async ({ request }) => {
+  109 |     const res = await request.get(`${BASE}/api/patients`);
+  110 |     expect(res.headers()['content-type']).toContain('application/json');
+  111 |   });
+  112 | });
+  113 | 
+  114 | test.describe('GET /api/patients/:id @api', () => {
+  115 |   test('returns patient by valid id', async ({ request }) => {
+  116 |     const res = await request.get(`${BASE}/api/patients/1`);
+  117 |     expect(res.status()).toBe(200);
+  118 |     const body = await res.json();
+```
